@@ -5,7 +5,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // Initialize Supabase client
 console.log('Initializing Supabase client...');
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 console.log('Supabase client initialized');
 
 // DOM Elements
@@ -59,7 +59,7 @@ async function handleMessageSubmit(e) {
         const email = `anonymous@visitor.com`;
         
         // Send message to Supabase
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('messages')
             .insert([
                 {
@@ -103,7 +103,7 @@ async function loadMessages() {
         console.log('Supabase URL:', SUPABASE_URL);
         
         // Fetch messages from Supabase
-        const { data: messages, error } = await supabase
+        const { data: messages, error } = await supabaseClient
             .from('messages')
             .select('*')
             .order('created_at', { ascending: false });
@@ -206,7 +206,7 @@ function showNotification(message, type) {
 
 // Setup real-time subscription for new messages
 function setupRealtimeSubscription() {
-    const subscription = supabase
+    const subscription = supabaseClient
         .channel('messages')
         .on('postgres_changes', 
             { 
