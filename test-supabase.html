@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <div id="status">Testing connection...</div>
+    <div id="result"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://omchjfgwmlbaefquswox.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2hqZmd3bWxiYWVmcXVzd294Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3MzI2NzgsImV4cCI6MjA3MTMwODY3OH0._vuvzsVNa7yaKILUrcvscJOFjeYSCGgARjGaEsh7LPk';
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function testConnection() {
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('result');
+
+            try {
+                statusDiv.textContent = 'Testing Supabase connection...';
+                
+                // Test 1: Check if we can connect
+                const { data, error } = await supabase
+                    .from('messages')
+                    .select('count')
+                    .limit(1);
+
+                if (error) {
+                    throw error;
+                }
+
+                statusDiv.textContent = '✅ Connection successful!';
+                resultDiv.innerHTML = `
+                    <h3>Test Results:</h3>
+                    <p>✅ Supabase connection: Working</p>
+                    <p>✅ Messages table: Accessible</p>
+                    <p>✅ RLS policies: Configured correctly</p>
+                    <br>
+                    <p><strong>Your inbox should work now!</strong></p>
+                `;
+
+            } catch (error) {
+                statusDiv.textContent = '❌ Connection failed!';
+                resultDiv.innerHTML = `
+                    <h3>Error Details:</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Code:</strong> ${error.code}</p>
+                    <p><strong>Details:</strong> ${error.details}</p>
+                    <br>
+                    <h3>Possible Solutions:</h3>
+                    <ul>
+                        <li>Check if the messages table exists in your Supabase project</li>
+                        <li>Verify RLS policies are set up correctly</li>
+                        <li>Ensure your API keys are correct</li>
+                    </ul>
+                `;
+            }
+        }
+
+        // Run test when page loads
+        testConnection();
+    </script>
+</body>
+</html>

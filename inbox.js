@@ -4,7 +4,9 @@ const SUPABASE_URL = 'https://omchjfgwmlbaefquswox.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tY2hqZmd3bWxiYWVmcXVzd294Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU3MzI2NzgsImV4cCI6MjA3MTMwODY3OH0._vuvzsVNa7yaKILUrcvscJOFjeYSCGgARjGaEsh7LPk';
 
 // Initialize Supabase client
+console.log('Initializing Supabase client...');
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+console.log('Supabase client initialized');
 
 // DOM Elements
 const messageForm = document.getElementById('messageForm');
@@ -97,11 +99,16 @@ async function loadMessages() {
         // Show loading state
         showLoadingState();
         
+        console.log('Attempting to load messages from Supabase...');
+        console.log('Supabase URL:', SUPABASE_URL);
+        
         // Fetch messages from Supabase
         const { data: messages, error } = await supabase
             .from('messages')
             .select('*')
             .order('created_at', { ascending: false });
+        
+        console.log('Supabase response:', { data: messages, error });
         
         if (error) {
             throw error;
@@ -112,7 +119,7 @@ async function loadMessages() {
         
     } catch (error) {
         console.error('Error loading messages:', error);
-        showNotification('Failed to load messages. Please try again.', 'error');
+        showNotification(`Failed to load messages: ${error.message}`, 'error');
         showEmptyState();
     }
 }
