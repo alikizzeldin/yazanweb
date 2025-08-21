@@ -14,8 +14,6 @@ const messagesList = document.getElementById('messagesList');
 const refreshBtn = document.getElementById('refreshBtn');
 
 // Message form elements
-const senderNameInput = document.getElementById('senderName');
-const senderEmailInput = document.getElementById('senderEmail');
 const messageContentInput = document.getElementById('messageContent');
 
 // Initialize the inbox
@@ -49,14 +47,16 @@ async function handleMessageSubmit(e) {
         submitBtn.disabled = true;
         
         // Get form data
-        const name = senderNameInput.value.trim();
-        const email = senderEmailInput.value.trim();
         const content = messageContentInput.value.trim();
         
         // Validate input
-        if (!name || !email || !content) {
-            throw new Error('Please fill in all fields');
+        if (!content) {
+            throw new Error('Please enter a message');
         }
+        
+        // Generate anonymous sender info
+        const name = `Anonymous User ${Math.floor(Math.random() * 1000)}`;
+        const email = `anonymous@visitor.com`;
         
         // Send message to Supabase
         const { data, error } = await supabase
@@ -139,15 +139,19 @@ function displayMessages(messages) {
 function createMessageHTML(message) {
     const timestamp = formatTimestamp(message.created_at);
     
+    // Check if it's an anonymous message
+    const isAnonymous = message.sender_email === 'anonymous@visitor.com';
+    const displayName = isAnonymous ? 'Anonymous Visitor' : escapeHtml(message.sender_name);
+    
     return `
         <div class="message-item">
             <div class="message-bubble">
                 <div class="message-header">
-                    <div class="message-sender">${escapeHtml(message.sender_name)}</div>
+                    <div class="message-sender">${displayName}</div>
                     <div class="message-time">${timestamp}</div>
                 </div>
                 <div class="message-content">${escapeHtml(message.message_content)}</div>
-                <div class="message-email">${escapeHtml(message.sender_email)}</div>
+                ${!isAnonymous ? `<div class="message-email">${escapeHtml(message.sender_email)}</div>` : ''}
             </div>
         </div>
     `;
@@ -169,7 +173,7 @@ function showEmptyState() {
         <div class="empty-messages">
             <i class="fas fa-inbox"></i>
             <h4>No messages yet</h4>
-            <p>Be the first to send a message!</p>
+            <p>Be the first to leave a message!</p>
         </div>
     `;
 }
