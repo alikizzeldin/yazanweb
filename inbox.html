@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yazan - Inbox</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="skill-page">
+    <!-- Background Stars -->
+    <div class="background-stars">
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+        <div class="background-star"></div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <!-- Header Stars -->
+        <div class="header-stars">
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+            <div class="header-star"></div>
+        </div>
+        
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="logo-text"><span>⭐</span> <span>🌟</span> <span>⭐</span></span>
+            </div>
+            <div class="header-title">Inbox</div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="gaming.html" class="nav-link">Gaming</a></li>
+                <li><a href="guitar.html" class="nav-link">Guitar</a></li>
+                <li><a href="design.html" class="nav-link">Design</a></li>
+                <li><a href="clips.html" class="nav-link">Clips</a></li>
+                <li><a href="inbox.html" class="nav-link active">Inbox</a></li>
+            </ul>
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Inbox Section -->
+        <section class="inbox-section">
+            <div class="container">
+                <h2 class="section-title">Message Inbox</h2>
+                <p class="section-subtitle">Connect with me through messages</p>
+                
+                <div class="inbox-container">
+                    <!-- Message Form -->
+                    <div class="message-form-container">
+                        <div class="form-card">
+                            <h3><i class="fas fa-paper-plane"></i> Send a Message</h3>
+                            <form id="messageForm" class="message-form">
+                                <div class="form-group">
+                                    <input type="text" id="senderName" placeholder="Your Name" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" id="senderEmail" placeholder="Your Email" required>
+                                </div>
+                                <div class="form-group">
+                                    <textarea id="messageContent" placeholder="Your Message" rows="4" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-rocket"></i> Send Message
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Messages Display -->
+                    <div class="messages-container">
+                        <div class="messages-header">
+                            <h3><i class="fas fa-inbox"></i> Message History</h3>
+                            <div class="messages-controls">
+                                <button id="refreshBtn" class="btn btn-secondary">
+                                    <i class="fas fa-sync-alt"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="messagesList" class="messages-list">
+                            <!-- Messages will be loaded here -->
+                            <div class="loading-messages">
+                                <div class="loading-spinner"></div>
+                                <p>Loading messages...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2025 Yazan. Capturing good times, one clip at a time.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="inbox.js"></script>
+</body>
+</html>
