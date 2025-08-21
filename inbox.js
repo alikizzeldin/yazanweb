@@ -335,11 +335,11 @@ function scrollToBottom() {
 
 // Setup auto-refresh as backup for real-time updates
 function setupAutoRefresh() {
-    // Refresh messages every 30 seconds as a backup
+    // Refresh messages every 2.5 seconds as a backup
     setInterval(() => {
         console.log('Auto-refreshing messages...');
         loadMessages();
-    }, 30000); // 30 seconds
+    }, 2500); // 2.5 seconds
 }
 
 // Update real-time status indicator
