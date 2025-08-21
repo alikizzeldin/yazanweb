@@ -29,7 +29,10 @@ function setupEventListeners() {
     messageForm.addEventListener('submit', handleMessageSubmit);
     
     // Refresh button
-    refreshBtn.addEventListener('click', loadMessages);
+    refreshBtn.addEventListener('click', () => {
+        showLoadingState();
+        loadMessages();
+    });
     
     // Real-time subscription for new messages
     setupRealtimeSubscription();
@@ -97,9 +100,6 @@ async function handleMessageSubmit(e) {
 // Load messages from Supabase
 async function loadMessages() {
     try {
-        // Show loading state
-        showLoadingState();
-        
         console.log('Attempting to load messages from Supabase...');
         console.log('Supabase URL:', SUPABASE_URL);
         
@@ -125,6 +125,65 @@ async function loadMessages() {
     }
 }
 
+// Load messages silently (for auto-refresh)
+async function loadMessagesSilently() {
+    try {
+        // Fetch messages from Supabase without showing loading state
+        const { data: messages, error } = await supabaseClient
+            .from('messages')
+            .select('*')
+            .order('created_at', { ascending: false });
+        
+        if (error) {
+            console.error('Silent refresh error:', error);
+            return;
+        }
+        
+        // Only update if there are actual changes
+        updateMessagesIfChanged(messages);
+        
+    } catch (error) {
+        console.error('Error in silent refresh:', error);
+    }
+}
+
+// Update messages only if there are changes
+function updateMessagesIfChanged(newMessages) {
+    const currentMessages = messagesList.querySelectorAll('.message-item');
+    const currentCount = currentMessages.length;
+    const newCount = newMessages ? newMessages.length : 0;
+    
+    // Check if count is different
+    if (currentCount !== newCount) {
+        console.log(`Message count changed: ${currentCount} → ${newCount}`);
+        displayMessages(newMessages);
+        return;
+    }
+    
+    // Check if any message content has changed
+    let hasChanges = false;
+    for (let i = 0; i < Math.min(currentCount, newCount); i++) {
+        const currentMessage = currentMessages[i];
+        const newMessage = newMessages[i];
+        
+        // Get current message content
+        const currentContent = currentMessage.querySelector('.message-content').textContent;
+        const newContent = newMessage.message_content;
+        
+        if (currentContent !== newContent) {
+            hasChanges = true;
+            break;
+        }
+    }
+    
+    if (hasChanges) {
+        console.log('Message content changed, updating display');
+        displayMessages(newMessages);
+    } else {
+        console.log('No changes detected, skipping update');
+    }
+}
+
 // Display messages in the UI
 function displayMessages(messages) {
     if (!messages || messages.length === 0) {
@@ -134,6 +193,16 @@ function displayMessages(messages) {
     
     const messagesHTML = messages.map(message => createMessageHTML(message)).join('');
     messagesList.innerHTML = messagesHTML;
+}
+
+// Show loading state (only for manual refresh)
+function showLoadingState() {
+    messagesList.innerHTML = `
+        <div class="loading-messages">
+            <div class="loading-spinner"></div>
+            <p>Loading messages...</p>
+        </div>
+    `;
 }
 
 // Create HTML for a single message
@@ -158,7 +227,7 @@ function createMessageHTML(message) {
     `;
 }
 
-// Show loading state
+// Show loading state (only for manual refresh)
 function showLoadingState() {
     messagesList.innerHTML = `
         <div class="loading-messages">
@@ -335,10 +404,10 @@ function scrollToBottom() {
 
 // Setup auto-refresh as backup for real-time updates
 function setupAutoRefresh() {
-    // Refresh messages every 2.5 seconds as a backup
+    // Refresh messages every 2.5 seconds as a backup (silently)
     setInterval(() => {
-        console.log('Auto-refreshing messages...');
-        loadMessages();
+        console.log('Auto-refreshing messages silently...');
+        loadMessagesSilently();
     }, 2500); // 2.5 seconds
 }
 
