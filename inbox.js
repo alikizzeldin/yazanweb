@@ -11,7 +11,6 @@ console.log('Supabase client initialized');
 // DOM Elements
 const messageForm = document.getElementById('messageForm');
 const messagesList = document.getElementById('messagesList');
-const refreshBtn = document.getElementById('refreshBtn');
 
 // Message form elements
 const messageContentInput = document.getElementById('messageContent');
@@ -27,12 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupEventListeners() {
     // Message form submission
     messageForm.addEventListener('submit', handleMessageSubmit);
-    
-    // Refresh button
-    refreshBtn.addEventListener('click', () => {
-        showLoadingState();
-        loadMessages();
-    });
     
     // Real-time subscription for new messages
     setupRealtimeSubscription();
