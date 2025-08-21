@@ -20,6 +20,7 @@ const messageContentInput = document.getElementById('messageContent');
 document.addEventListener('DOMContentLoaded', function() {
     loadMessages();
     setupEventListeners();
+    setupAutoRefresh();
 });
 
 // Setup event listeners
@@ -144,7 +145,7 @@ function createMessageHTML(message) {
     const displayName = isAnonymous ? 'Anonymous Visitor' : escapeHtml(message.sender_name);
     
     return `
-        <div class="message-item" data-message-id="${message.id}">
+        <div class="message-item">
             <div class="message-bubble">
                 <div class="message-header">
                     <div class="message-sender">${displayName}</div>
@@ -242,18 +243,35 @@ function setupRealtimeSubscription() {
             }, 
             (payload) => {
                 console.log('New message received via real-time:', payload.new);
-                handleNewMessage(payload.new);
-            }
-        )
-        .on('postgres_changes',
-            {
-                event: 'UPDATE',
-                schema: 'public',
-                table: 'messages'
-            },
-            (payload) => {
-                console.log('Message updated via real-time:', payload.new);
-                handleMessageUpdate(payload.new);
+                
+                // Add new message to the top of the list with animation
+                const newMessageHTML = createMessageHTML(payload.new);
+                const firstMessage = messagesList.querySelector('.message-item');
+                
+                if (firstMessage) {
+                    // Insert at the top with a smooth animation
+                    messagesList.insertAdjacentHTML('afterbegin', newMessageHTML);
+                    
+                    // Add entrance animation to the new message
+                    const newMessageElement = messagesList.querySelector('.message-item');
+                    if (newMessageElement) {
+                        newMessageElement.style.opacity = '0';
+                        newMessageElement.style.transform = 'translateY(-20px)';
+                        
+                        setTimeout(() => {
+                            newMessageElement.style.transition = 'all 0.5s ease';
+                            newMessageElement.style.opacity = '1';
+                            newMessageElement.style.transform = 'translateY(0)';
+                        }, 10);
+                    }
+                } else {
+                    // If no messages exist, reload all messages
+                    loadMessages();
+                }
+                
+                // Show notification with sound effect
+                showNotification('New message received! 🎉', 'success');
+                playNotificationSound();
             }
         )
         .on('postgres_changes',
@@ -264,7 +282,9 @@ function setupRealtimeSubscription() {
             },
             (payload) => {
                 console.log('Message deleted via real-time:', payload.old);
-                handleMessageDelete(payload.old);
+                // Reload messages to reflect deletion
+                loadMessages();
+                showNotification('Message removed', 'info');
             }
         )
         .subscribe((status) => {
@@ -276,71 +296,6 @@ function setupRealtimeSubscription() {
         });
         
     return subscription;
-}
-
-// Handle new message from database trigger
-function handleNewMessage(message) {
-    // Add new message to the top of the list with animation
-    const newMessageHTML = createMessageHTML(message);
-    const firstMessage = messagesList.querySelector('.message-item');
-    
-    if (firstMessage) {
-        // Insert at the top with a smooth animation
-        messagesList.insertAdjacentHTML('afterbegin', newMessageHTML);
-        
-        // Add entrance animation to the new message
-        const newMessageElement = messagesList.querySelector('.message-item');
-        if (newMessageElement) {
-            newMessageElement.style.opacity = '0';
-            newMessageElement.style.transform = 'translateY(-20px)';
-            
-            setTimeout(() => {
-                newMessageElement.style.transition = 'all 0.5s ease';
-                newMessageElement.style.opacity = '1';
-                newMessageElement.style.transform = 'translateY(0)';
-            }, 10);
-        }
-    } else {
-        // If no messages exist, reload all messages
-        loadMessages();
-    }
-    
-    // Show notification with sound effect
-    showNotification('New message received! 🎉', 'success');
-    playNotificationSound();
-}
-
-// Handle message update from database trigger
-function handleMessageUpdate(message) {
-    // Find and update the existing message
-    const messageElement = messagesList.querySelector(`[data-message-id="${message.id}"]`);
-    if (messageElement) {
-        const updatedHTML = createMessageHTML(message);
-        messageElement.outerHTML = updatedHTML;
-        showNotification('Message updated', 'info');
-    } else {
-        // If message not found, reload all messages
-        loadMessages();
-    }
-}
-
-// Handle message deletion from database trigger
-function handleMessageDelete(message) {
-    // Find and remove the message element
-    const messageElement = messagesList.querySelector(`[data-message-id="${message.id}"]`);
-    if (messageElement) {
-        messageElement.style.transition = 'all 0.3s ease';
-        messageElement.style.opacity = '0';
-        messageElement.style.transform = 'translateX(-100%)';
-        
-        setTimeout(() => {
-            messageElement.remove();
-            showNotification('Message removed', 'info');
-        }, 300);
-    } else {
-        // If message not found, reload all messages
-        loadMessages();
-    }
 }
 
 // Format timestamp
@@ -378,8 +333,14 @@ function scrollToBottom() {
     messagesList.scrollTop = messagesList.scrollHeight;
 }
 
-// Note: Auto-refresh removed - now using database triggers for real-time updates
-// Database triggers will automatically notify all connected clients when messages change
+// Setup auto-refresh as backup for real-time updates
+function setupAutoRefresh() {
+    // Refresh messages every 30 seconds as a backup
+    setInterval(() => {
+        console.log('Auto-refreshing messages...');
+        loadMessages();
+    }, 30000); // 30 seconds
+}
 
 // Update real-time status indicator
 function updateRealtimeStatus(status) {
