@@ -20,6 +20,7 @@ const messageContentInput = document.getElementById('messageContent');
 document.addEventListener('DOMContentLoaded', function() {
     loadMessages();
     setupEventListeners();
+    setupAutoRefresh();
 });
 
 // Setup event listeners
@@ -181,14 +182,14 @@ function showEmptyState() {
 // Show notification
 function showNotification(message, type) {
     // Remove existing notifications
-    const existingNotifications = document.querySelectorAll('.success-message, .error-message');
+    const existingNotifications = document.querySelectorAll('.success-message, .error-message, .info-message');
     existingNotifications.forEach(notification => notification.remove());
     
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = type === 'success' ? 'success-message' : 'error-message';
+    notification.className = type === 'success' ? 'success-message' : type === 'error' ? 'error-message' : 'info-message';
     notification.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
         <span>${message}</span>
     `;
     
@@ -204,8 +205,34 @@ function showNotification(message, type) {
     }, 5000);
 }
 
+// Play notification sound
+function playNotificationSound() {
+    try {
+        // Create a simple notification sound using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (error) {
+        console.log('Could not play notification sound:', error);
+    }
+}
+
 // Setup real-time subscription for new messages
 function setupRealtimeSubscription() {
+    console.log('Setting up real-time subscription...');
+    
     const subscription = supabaseClient
         .channel('messages')
         .on('postgres_changes', 
@@ -215,22 +242,60 @@ function setupRealtimeSubscription() {
                 table: 'messages' 
             }, 
             (payload) => {
-                // Add new message to the top of the list
+                console.log('New message received via real-time:', payload.new);
+                
+                // Add new message to the top of the list with animation
                 const newMessageHTML = createMessageHTML(payload.new);
                 const firstMessage = messagesList.querySelector('.message-item');
                 
                 if (firstMessage) {
+                    // Insert at the top with a smooth animation
                     messagesList.insertAdjacentHTML('afterbegin', newMessageHTML);
+                    
+                    // Add entrance animation to the new message
+                    const newMessageElement = messagesList.querySelector('.message-item');
+                    if (newMessageElement) {
+                        newMessageElement.style.opacity = '0';
+                        newMessageElement.style.transform = 'translateY(-20px)';
+                        
+                        setTimeout(() => {
+                            newMessageElement.style.transition = 'all 0.5s ease';
+                            newMessageElement.style.opacity = '1';
+                            newMessageElement.style.transform = 'translateY(0)';
+                        }, 10);
+                    }
                 } else {
                     // If no messages exist, reload all messages
                     loadMessages();
                 }
                 
-                // Show notification
-                showNotification('New message received!', 'success');
+                // Show notification with sound effect
+                showNotification('New message received! 🎉', 'success');
+                playNotificationSound();
             }
         )
-        .subscribe();
+        .on('postgres_changes',
+            {
+                event: 'DELETE',
+                schema: 'public',
+                table: 'messages'
+            },
+            (payload) => {
+                console.log('Message deleted via real-time:', payload.old);
+                // Reload messages to reflect deletion
+                loadMessages();
+                showNotification('Message removed', 'info');
+            }
+        )
+        .subscribe((status) => {
+            console.log('Real-time subscription status:', status);
+            updateRealtimeStatus(status);
+            if (status === 'SUBSCRIBED') {
+                showNotification('Real-time updates connected! 🔗', 'success');
+            }
+        });
+        
+    return subscription;
 }
 
 // Format timestamp
@@ -266,6 +331,34 @@ function escapeHtml(text) {
 // Add smooth scrolling to messages list
 function scrollToBottom() {
     messagesList.scrollTop = messagesList.scrollHeight;
+}
+
+// Setup auto-refresh as backup for real-time updates
+function setupAutoRefresh() {
+    // Refresh messages every 30 seconds as a backup
+    setInterval(() => {
+        console.log('Auto-refreshing messages...');
+        loadMessages();
+    }, 30000); // 30 seconds
+}
+
+// Update real-time status indicator
+function updateRealtimeStatus(status) {
+    const statusDot = document.querySelector('.status-dot');
+    const statusText = document.querySelector('.status-text');
+    
+    if (statusDot && statusText) {
+        if (status === 'SUBSCRIBED') {
+            statusDot.classList.add('connected');
+            statusText.textContent = 'Live';
+        } else if (status === 'CHANNEL_ERROR') {
+            statusDot.classList.remove('connected');
+            statusText.textContent = 'Error';
+        } else {
+            statusDot.classList.remove('connected');
+            statusText.textContent = 'Connecting...';
+        }
+    }
 }
 
 // Export functions for potential use in other scripts
